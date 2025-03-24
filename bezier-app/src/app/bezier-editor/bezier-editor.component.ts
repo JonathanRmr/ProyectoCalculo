@@ -7,40 +7,84 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="controls">
-      <button (click)="clear()">Limpiar</button>
-      <button (click)="addControlPoint()">Añadir punto de control</button>
-      <button (click)="animateCurve()">Animar curva</button>
-      <div class="color-picker">
-        <label>Color de curva: </label>
-        <input type="color" [(ngModel)]="curveColor" (change)="render()">
+    <div class="container">
+      <header>
+        <h1>Editor de Curvas de Bézier</h1>
+        <p>Explora y anima curvas de Bézier con facilidad.</p>
+      </header>
+      <div class="controls">
+        <button (click)="clear()">Limpiar</button>
+        <button (click)="addControlPoint()">Añadir Punto</button>
+        <button (click)="animateCurve()">Animar Curva</button>
+        <div class="color-picker">
+          <label>Color de Curva:</label>
+          <input type="color" [(ngModel)]="curveColor" (change)="render()">
+        </div>
+        <div class="color-picker">
+          <label>Color de Puntos:</label>
+          <input type="color" [(ngModel)]="pointColor" (change)="render()">
+        </div>
       </div>
-      <div class="color-picker">
-        <label>Color de puntos: </label>
-        <input type="color" [(ngModel)]="pointColor" (change)="render()">
-      </div>
+      <canvas #canvas width="800" height="600"></canvas>
     </div>
-    <canvas #canvas width="800" height="600"></canvas>
   `,
   styles: [`
     :host {
       display: block;
+      font-family: 'Arial', sans-serif;
+      color: #333;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
       padding: 20px;
+      background: #f4f4f9;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      font-size: 2rem;
+      color: #0066ff;
+    }
+    header p {
+      font-size: 1rem;
+      color: #555;
     }
     .controls {
-      margin-bottom: 10px;
       display: flex;
-      gap: 10px;
-      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      color: #fff;
+      background: #0066ff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #0052cc;
     }
     .color-picker {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 10px;
     }
     canvas {
-      border: 1px solid #ccc;
-      background-color: #f9f9f9;
+      display: block;
+      margin: 0 auto;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #e0e7ff, #f9f9f9);
     }
   `]
 })
@@ -316,30 +360,37 @@ export class BezierEditorComponent implements AfterViewInit {
 
   animateCurve(): void {
     if (this.controlPoints.length < 2) return;
-    
-    // Detener animación anterior si existe
+
+    // Detener cualquier animación previa
     if (this.animationFrame !== null) {
       cancelAnimationFrame(this.animationFrame);
     }
-    
+
     this.animating = true;
     this.animationProgress = 0;
-    
+
     const animate = () => {
+      // Incrementar el progreso de la animación
       this.animationProgress += 0.01;
-      
+
+      // Limitar el progreso al 1 (100%)
       if (this.animationProgress >= 1) {
         this.animationProgress = 1;
         this.animating = false;
-        this.render();
-        this.animationFrame = null;
-        return;
       }
-      
+
+      // Renderizar la curva con el progreso actual
       this.render();
-      this.animationFrame = requestAnimationFrame(animate);
+
+      // Continuar la animación si no ha terminado
+      if (this.animating) {
+        this.animationFrame = requestAnimationFrame(animate);
+      } else {
+        this.animationFrame = null; // Limpiar el frame de animación
+      }
     };
-    
+
+    // Iniciar la animación
     this.animationFrame = requestAnimationFrame(animate);
   }
 
